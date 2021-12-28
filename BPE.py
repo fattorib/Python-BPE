@@ -1,3 +1,4 @@
+from typing import final
 import numpy as np
 import collections, re
 import nltk
@@ -13,14 +14,20 @@ class BytePairEncoding():
     
     """
 
-    def __init__(self, corpus_path):
-        with open(corpus_path) as f:
+    def __init__(self, corpus_path, lower_case, EOW_TOKEN = '</w>'):
+        with open(corpus_path, encoding='utf-8') as f:
             self.corpus = f.read()
 
+        if lower_case:
+            self.corpus = self.corpus.lower()
+
+        self.lower_case = lower_case
         print(f'Base corpus has {len(self.corpus)} characters with {len(set(self.corpus))} distinct.')
 
+        self.EOW_TOKEN = EOW_TOKEN
+
     # ---------- Preprocessing ---------- #
-    def split_into_words(self, EOW_TOKEN="</w>"):
+    def split_into_words(self):
         """
         Split text into list of words and add EOW token to each.
         Create vocab of all words with their counts.
@@ -35,7 +42,7 @@ class BytePairEncoding():
 
         vocab = collections.defaultdict(int)
         for word in split_string:
-            vocab[" ".join(list(word) + [EOW_TOKEN])] += 1
+            vocab[" ".join(list(word) + [self.EOW_TOKEN])] += 1
 
         return vocab
 
@@ -78,27 +85,15 @@ class BytePairEncoding():
 
         pattern_find = list(pairs_pattern.keys())[0]
 
-        # print(pattern, pattern_find)
-
-        #Need to remap special characters
-
-        SPECIAL_CHARS = ['^','$','|','?','*','+','(',')','[',']','{','}','.']
-
         pattern_A = pattern_find[0]
         pattern_B = pattern_find[1]
-
-        pattern_A = re.sub(r'\\', r'\\\\', pattern_A)
-        pattern_B = re.sub(r'\\', r'\\\\', pattern_B)
-        for c in SPECIAL_CHARS:
-            pattern_A = re.sub('\\'+c, '\\'+c, pattern_A)
-            pattern_B = re.sub('\\'+c, '\\'+c, pattern_B)
 
         bigram = pattern_A + ' ' + pattern_B
         
         merged_vocab = collections.defaultdict(int)
 
         for word, freq in vocab.items():
-            repl = re.sub(bigram, pattern, word)
+            repl = re.sub(re.escape(bigram), pattern, word)
             merged_vocab[repl] += freq
 
         return merged_vocab
@@ -139,16 +134,51 @@ class BytePairEncoding():
 
         final_vocab = self.create_final_vocab(bpe_vocab=BPE_vocab)
 
-        print(final_vocab)
-
         tokens_stoi, tokens_itos = self.create_tokenization(final_vocab)
+
+        self.stoi = tokens_stoi
+        self.itos = tokens_itos
+        self.vocab = final_vocab
+
+    
+    def tokenize(self,string_to_tokenize):
+
+        assert self.stoi is not None and self.itos is not None, 'Requires tokenization of base corpus first.'
+
+        #Split string into characters and apply merge rules
+
+        split_chars = []
+        for word in nltk.wordpunct_tokenize(string_to_tokenize.lower() if self.lower_case else string_to_tokenize):
+            split_chars.append(" ".join(list(word) + [self.EOW_TOKEN]))
+
+       
+        word_tokenization = []
+    
+        for word in split_chars:
+            for token in sorted(self.vocab, key = len, reverse=True):            
+                #Splits BPE tokens like 'mathbb</w>' -> ['mathbb', '</w>', '']
+                split_tok = re.split('(</w>)', token)
+                if len(split_tok) > 1:
+                    pattern = " ".join(list(split_tok[0])+[split_tok[1]])
+                else:
+                    pattern = " ".join(list(split_tok[0]))
+                # print(f'Token: {token} Pattern:{pattern}, Word: {word}')
+                word = re.sub(re.escape(pattern), repl=token, string = word)
+        
+            word_tokenization.append(word)
+        print(word_tokenization)
+        return word_tokenization
+
+
 
 if __name__ == "__main__":
 
     # string = "this is a test string!"
 
-    BPE = BytePairEncoding(corpus_path= 'corpus.txt')
+    BPE = BytePairEncoding(corpus_path= 'corpus.txt', lower_case = True)
 
-    BPE.create_vocab_and_tokenization(num_merges=100)
+    BPE.create_vocab_and_tokenization(num_merges=150)
+
+    BPE.tokenize(string_to_tokenize='This is a test sentence we are trying to tokenize. Lets see what happens. Frobenius! Harry!')
 
 
