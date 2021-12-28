@@ -61,8 +61,23 @@ def perform_merge(vocab, pairs, pairs_pattern):
 
     pattern_find = list(pairs_pattern.keys())[0]
 
-    bigram = pattern_find[0] + ' ' + pattern_find[1]
+    # print(pattern, pattern_find)
 
+    #Need to remap special characters
+
+    SPECIAL_CHARS = ['^','$','|','?','*','+','(',')','[',']','{','}','.']
+
+    pattern_A = pattern_find[0]
+    pattern_B = pattern_find[1]
+
+    pattern_A = re.sub(r'\\', r'\\\\', pattern_A)
+    pattern_B = re.sub(r'\\', r'\\\\', pattern_B)
+    for c in SPECIAL_CHARS:
+        pattern_A = re.sub('\\'+c, '\\'+c, pattern_A)
+        pattern_B = re.sub('\\'+c, '\\'+c, pattern_B)
+
+    bigram = pattern_A + ' ' + pattern_B
+    
     merged_vocab = collections.defaultdict(int)
 
     for word, freq in vocab.items():
@@ -84,11 +99,15 @@ def perform_BPE(base_corpus, num_merges):
 
 if __name__ == "__main__":
 
-    string = "this is a test string!"
+    # string = "this is a test string!"
+
+    with open('corpus.txt') as f:
+
+        base_corpus = f.read()
 
     # print(perform_merge(vocab, pairs))
 
-    print(perform_BPE(base_corpus=string, num_merges=5))
+    print(perform_BPE(base_corpus=base_corpus, num_merges=100))
 
 
 
