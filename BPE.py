@@ -165,9 +165,9 @@ class BytePairEncoding():
                 # print(f'Token: {token} Pattern:{pattern}, Word: {word}')
                 word = re.sub(re.escape(pattern), repl=token, string = word)
         
-            word_tokenization.append(word)
-        print(word_tokenization)
-        return word_tokenization
+            word_tokenization += word.split()
+
+        return [self.stoi[i] for i in word_tokenization]
 
 
 
@@ -179,6 +179,6 @@ if __name__ == "__main__":
 
     BPE.create_vocab_and_tokenization(num_merges=150)
 
-    BPE.tokenize(string_to_tokenize='This is a test sentence we are trying to tokenize. Lets see what happens. Frobenius! Harry!')
+    print(BPE.tokenize(string_to_tokenize='This is a test sentence we are trying to tokenize. Lets see what happens. Frobenius! Harry!'))
 
 
