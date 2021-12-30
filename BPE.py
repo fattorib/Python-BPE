@@ -1,8 +1,6 @@
-from typing import final
-import numpy as np
 import collections, re
 import nltk
-import pickle
+import json
 from tqdm import tqdm
 
 
@@ -142,16 +140,26 @@ class BytePairEncoding:
         # return sorted(list(set(vocab)))
         return list(set(vocab))
 
-    def create_tokenization(self, vocab, save_pkl=True):
+    def create_tokenization(self, vocab, save_tokenization = True):
 
         itos = {i: vocab[i] for i in range(len(vocab))}
 
         stoi = {vocab[i]: i for i in range(len(vocab))}
 
-        # if save_pkl:
-        #     pickle.dump(stoi,open(f'BPE/stoi_vocab_{len(chars)}.pkl', 'wb'))
-        #     pickle.dump(itos,open(f'BPE/itos_vocab_{len(chars)}.pkl', 'wb'))
+        if save_tokenization:
+            with open('tokenization.json', 'w') as j:
+                json.dump(itos,j, indent = 4)
         return stoi, itos
+
+    def load_tokenization(self,tokenization_path):
+
+        with open(tokenization_path,'r') as f:
+            saved_dict = json.load(f)
+
+        self.itos = {int(k): v for k,v in saved_dict.items()}
+
+        self.stoi = {v: int(k) for k,v in saved_dict.items()}
+            
 
     def create_vocab_and_tokenization(self, num_merges):
         BPE_vocab = self.perform_BPE(num_merges=num_merges)
@@ -219,7 +227,9 @@ if __name__ == "__main__":
 
     BPE.create_vocab_and_tokenization(num_merges=500)
 
-    tokens = BPE.tokenize(
-        string_to_tokenize="This is a test sentence we are trying to tokenize. Lets see what happens. manifold Frobenius! Harry!"
-    )
-    print(BPE.tokens_to_str(tokens))
+    # tokens = BPE.tokenize(
+    #     string_to_tokenize="This is a test sentence we are trying to tokenize. Lets see what happens. manifold Frobenius! Harry!"
+    # )
+    # print(BPE.tokens_to_str(tokens))
+
+    BPE.load_tokenization('tokenization.json')
