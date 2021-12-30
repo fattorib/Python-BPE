@@ -14,7 +14,7 @@ class BytePairEncoding():
     
     """
 
-    def __init__(self, corpus_path, lower_case, EOW_TOKEN = '</w>'):
+    def __init__(self, corpus_path, lower_case, EOW_TOKEN = '</w>', UNK_TOKEN = '_UNK_'):
         with open(corpus_path, encoding='utf-8') as f:
             self.corpus = f.read()
 
@@ -25,7 +25,7 @@ class BytePairEncoding():
         print(f'Base corpus has {len(self.corpus)} characters with {len(set(self.corpus))} distinct.')
 
         self.EOW_TOKEN = EOW_TOKEN
-
+        self.UNK_TOKEN = UNK_TOKEN
        
 
     # ---------- Preprocessing ---------- #
@@ -108,7 +108,6 @@ class BytePairEncoding():
     def perform_BPE(self,num_merges):
 
         vocab = self.split_into_words_and_create_vocab()
-
         #Create the base vocab of all symbols and progressively add to it 
         self.vocab = self.create_vocab(vocab)
 
@@ -145,6 +144,7 @@ class BytePairEncoding():
     def create_vocab_and_tokenization(self,num_merges):
         BPE_vocab = self.perform_BPE(num_merges=num_merges)
 
+    
         # final_vocab = self.create_vocab(bpe_vocab=BPE_vocab)
 
         tokens_stoi, tokens_itos = self.create_tokenization(self.vocab)
@@ -167,17 +167,23 @@ class BytePairEncoding():
         word_tokenization = []
     
         for word in split_chars:
-            for token in sorted(self.vocab, key = len, reverse=True):            
+            # for token in sorted(self.vocab, key = len, reverse=True):    
+            for token in self.vocab:        
                 #Splits BPE tokens like 'mathbb</w>' -> ['mathbb', '</w>', '']
                 split_tok = re.split('(</w>)', token)
                 if len(split_tok) > 1:
                     pattern = " ".join(list(split_tok[0])+[split_tok[1]])
                 else:
                     pattern = " ".join(list(split_tok[0]))
-                word = re.sub(re.escape(pattern), repl=token, string = word)
+                
+                #ugh.
+                if pattern == '\\':
+                    word = re.sub(r'(?<!\S)' + re.escape(pattern) + r'(?!\S)', repl=re.escape(token), string = word)
+                else:
+                    word = re.sub(r'(?<!\S)' + re.escape(pattern) + r'(?!\S)', repl=token, string = word)
         
             word_tokenization += word.split()
-
+        print(word_tokenization)
         return [self.stoi[i] for i in word_tokenization]
 
 
@@ -185,12 +191,10 @@ class BytePairEncoding():
 
 if __name__ == "__main__":
 
-    # string = "this is a test string!"
-
     BPE = BytePairEncoding(corpus_path= 'corpus.txt', lower_case = True)
 
-    BPE.create_vocab_and_tokenization(num_merges=100)
+    BPE.create_vocab_and_tokenization(num_merges=50)
 
-    # print(BPE.tokenize(string_to_tokenize='This is a test sentence we are trying to tokenize. Lets see what happens. Frobenius! Harry!'))
+    print(BPE.tokenize(string_to_tokenize='This is a test sentence we are trying to tokenize. Lets see what happens. manifold Frobenius! Harry!'))
 
 
