@@ -26,10 +26,10 @@ class BytePairEncoding():
 
         self.EOW_TOKEN = EOW_TOKEN
 
-        self.final_vocab = None
+       
 
     # ---------- Preprocessing ---------- #
-    def split_into_words(self):
+    def split_into_words_and_create_vocab(self):
         """
         Split text into list of words and add EOW token to each.
         Create vocab of all words with their counts.
@@ -90,7 +90,7 @@ class BytePairEncoding():
         pattern_A = pattern_find[0]
         pattern_B = pattern_find[1]
 
-        bigram = " ".join(pattern_A, pattern_B)
+        bigram = " ".join([pattern_A, pattern_B])
 
         # print(f'Best token: {pattern_find} -> {pattern}')
         
@@ -99,44 +99,37 @@ class BytePairEncoding():
         for word, freq in vocab.items():
 
             #This regex case here is weird... had to look at the paper for the negative lookbehinds.
-            # I believe it handles edge cases to prevent merges on parts of tokens.
             # Without this, for example, the merge rule ('e','l') would produce 'el','del','rel'
             repl = re.sub(r'(?<!\S)' + re.escape(bigram) + r'(?!\S)', pattern, word)
             merged_vocab[repl] += freq
 
-        return merged_vocab
+        return merged_vocab, pattern
        
     def perform_BPE(self,num_merges):
 
-        vocab = self.split_into_words()
+        vocab = self.split_into_words_and_create_vocab()
 
-        # for i in tqdm(range(num_merges)):
-        for i in range(num_merges):
+        #Create the base vocab of all symbols and progressively add to it 
+        self.vocab = self.create_vocab(vocab)
+
+        for i in tqdm(range(num_merges)):
             pairs, pairs_pattern = self.count_pairs(vocab)
-            vocab = self.perform_merge(vocab, pairs, pairs_pattern)
-            print(f'Number of tokens at {i}th merge {len(self.create_final_vocab(vocab))}')
+            vocab, pattern = self.perform_merge(vocab, pairs, pairs_pattern)
+            if pattern is not None:
+                self.vocab.append(pattern)
+            # print(f'Number of tokens at {i}th merge {len(self.vocab)}')
 
         return vocab
 
-    def create_final_vocab(self,bpe_vocab):
+    def create_vocab(self,bpe_vocab):
         vocab = []
 
         for word, _ in bpe_vocab.items():
             for token in word.split():
                 vocab.append(token)
 
-        # final_vocab = sorted(list(set(vocab)))
-
-        # if self.final_vocab is not None:
-        #     #Get the new tokens that were added
-        #     set_difference = set(final_vocab) - set(self.final_vocab)
-
-        #     list_difference = list(set_difference)
-        #     if len(list_difference) > 1:
-        #         print(list_difference)
-
-        # self.final_vocab = final_vocab
-        return sorted(list(set(vocab)))
+        # return sorted(list(set(vocab)))
+        return list(set(vocab))
 
     def create_tokenization(self,vocab, save_pkl = True):
         
@@ -152,13 +145,12 @@ class BytePairEncoding():
     def create_vocab_and_tokenization(self,num_merges):
         BPE_vocab = self.perform_BPE(num_merges=num_merges)
 
-        final_vocab = self.create_final_vocab(bpe_vocab=BPE_vocab)
+        # final_vocab = self.create_vocab(bpe_vocab=BPE_vocab)
 
-        tokens_stoi, tokens_itos = self.create_tokenization(final_vocab)
+        tokens_stoi, tokens_itos = self.create_tokenization(self.vocab)
 
         self.stoi = tokens_stoi
         self.itos = tokens_itos
-        self.vocab = final_vocab
 
     
     def tokenize(self,string_to_tokenize):
@@ -197,7 +189,7 @@ if __name__ == "__main__":
 
     BPE = BytePairEncoding(corpus_path= 'corpus.txt', lower_case = True)
 
-    BPE.create_vocab_and_tokenization(num_merges=200)
+    BPE.create_vocab_and_tokenization(num_merges=100)
 
     # print(BPE.tokenize(string_to_tokenize='This is a test sentence we are trying to tokenize. Lets see what happens. Frobenius! Harry!'))
 
