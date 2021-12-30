@@ -14,7 +14,7 @@ class BytePairEncoding():
     
     """
 
-    def __init__(self, corpus_path, lower_case, EOW_TOKEN = '</w>', UNK_TOKEN = '_UNK_'):
+    def __init__(self, corpus_path, lower_case, EOW_TOKEN = '</w>', UNK_TOKEN = '<UNK>', PAD_TOKEN = '<PAD>'):
         with open(corpus_path, encoding='utf-8') as f:
             self.corpus = f.read()
 
@@ -26,6 +26,7 @@ class BytePairEncoding():
 
         self.EOW_TOKEN = EOW_TOKEN
         self.UNK_TOKEN = UNK_TOKEN
+        self.PAD_TOKEN = PAD_TOKEN
        
 
     # ---------- Preprocessing ---------- #
@@ -144,9 +145,6 @@ class BytePairEncoding():
     def create_vocab_and_tokenization(self,num_merges):
         BPE_vocab = self.perform_BPE(num_merges=num_merges)
 
-    
-        # final_vocab = self.create_vocab(bpe_vocab=BPE_vocab)
-
         tokens_stoi, tokens_itos = self.create_tokenization(self.vocab)
 
         self.stoi = tokens_stoi
@@ -167,10 +165,9 @@ class BytePairEncoding():
         word_tokenization = []
     
         for word in split_chars:
-            # for token in sorted(self.vocab, key = len, reverse=True):    
-            for token in self.vocab:        
+            for token in sorted(self.vocab, key = len, reverse=True): 
                 #Splits BPE tokens like 'mathbb</w>' -> ['mathbb', '</w>', '']
-                split_tok = re.split('(</w>)', token)
+                split_tok = re.split(f'({self.EOW_TOKEN})', token)
                 if len(split_tok) > 1:
                     pattern = " ".join(list(split_tok[0])+[split_tok[1]])
                 else:
@@ -181,20 +178,26 @@ class BytePairEncoding():
                     word = re.sub(r'(?<!\S)' + re.escape(pattern) + r'(?!\S)', repl=re.escape(token), string = word)
                 else:
                     word = re.sub(r'(?<!\S)' + re.escape(pattern) + r'(?!\S)', repl=token, string = word)
-        
             word_tokenization += word.split()
-        print(word_tokenization)
+        # print(word_tokenization)
         return [self.stoi[i] for i in word_tokenization]
 
+    def tokens_to_str(self,tokens):
+        """
+        Takes a list of tokens and converts it back to text.
+        """
+        
+        concat_str = "".join([self.itos[i] for i in tokens])
 
-
+        return " ".join(concat_str.split(self.EOW_TOKEN))
 
 if __name__ == "__main__":
 
     BPE = BytePairEncoding(corpus_path= 'corpus.txt', lower_case = True)
 
-    BPE.create_vocab_and_tokenization(num_merges=50)
+    BPE.create_vocab_and_tokenization(num_merges=100)
 
-    print(BPE.tokenize(string_to_tokenize='This is a test sentence we are trying to tokenize. Lets see what happens. manifold Frobenius! Harry!'))
+    tokens = BPE.tokenize(string_to_tokenize='This is a test sentence we are trying to tokenize. Lets see what happens. manifold Frobenius! Harry!')
 
+    print(BPE.tokens_to_str(tokens))
 
