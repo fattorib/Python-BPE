@@ -102,8 +102,6 @@ class BytePairEncoding:
 
         bigram = " ".join([pattern_A, pattern_B])
 
-        # print(f'Best token: {pattern_find} -> {pattern}')
-
         merged_vocab = collections.defaultdict(int)
 
         for word, freq in vocab.items():
@@ -140,26 +138,25 @@ class BytePairEncoding:
         # return sorted(list(set(vocab)))
         return list(set(vocab))
 
-    def create_tokenization(self, vocab, save_tokenization = True):
+    def create_tokenization(self, vocab, save_tokenization=True):
 
         itos = {i: vocab[i] for i in range(len(vocab))}
 
         stoi = {vocab[i]: i for i in range(len(vocab))}
 
         if save_tokenization:
-            with open('tokenization.json', 'w') as j:
-                json.dump(itos,j, indent = 4)
+            with open("tokenization.json", "w") as j:
+                json.dump(itos, j, indent=4)
         return stoi, itos
 
-    def load_tokenization(self,tokenization_path):
+    def load_tokenization(self, tokenization_path):
 
-        with open(tokenization_path,'r') as f:
+        with open(tokenization_path, "r") as f:
             saved_dict = json.load(f)
 
-        self.itos = {int(k): v for k,v in saved_dict.items()}
+        self.itos = {int(k): v for k, v in saved_dict.items()}
 
-        self.stoi = {v: int(k) for k,v in saved_dict.items()}
-            
+        self.stoi = {v: int(k) for k, v in saved_dict.items()}
 
     def create_vocab_and_tokenization(self, num_merges):
         BPE_vocab = self.perform_BPE(num_merges=num_merges)
@@ -232,4 +229,4 @@ if __name__ == "__main__":
     # )
     # print(BPE.tokens_to_str(tokens))
 
-    BPE.load_tokenization('tokenization.json')
+    BPE.load_tokenization("tokenization.json")
