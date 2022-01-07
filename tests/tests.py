@@ -2,6 +2,7 @@ import unittest
 from BPE import BytePairEncoding
 import pickle
 
+
 class TestBPE(unittest.TestCase):
     def setUp(self) -> None:
         self.bpe = BytePairEncoding(
@@ -102,17 +103,16 @@ class TestBPE(unittest.TestCase):
 
         self.bpe_full_uncased.create_vocab_and_tokenization(num_merges=250)
 
-        with open(r'tests\bpe_expected_uncased.pkl', 'rb') as f:
+        with open(r"tests\bpe_expected_uncased.pkl", "rb") as f:
             expected_vocab = pickle.load(f)
-        
+
         self.assertEqual(set(expected_vocab), set(self.bpe_full_uncased.vocab))
 
     def test_perform_BPE_cased(self):
 
         self.bpe_full_cased.create_vocab_and_tokenization(num_merges=250)
 
-        with open(r'tests\bpe_expected_cased.pkl', 'rb') as f:
+        with open(r"tests\bpe_expected_cased.pkl", "rb") as f:
             expected_vocab = pickle.load(f)
-        
-        self.assertEqual(set(expected_vocab), set(self.bpe_full_cased.vocab))
 
+        self.assertEqual(set(expected_vocab), set(self.bpe_full_cased.vocab))

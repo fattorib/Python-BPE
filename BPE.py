@@ -91,27 +91,31 @@ class BytePairEncoding:
         {'t h is </w>': 1, 'is </w>': 1, 'a </w>': 1, 't e s t </w>': 1, 's t r i n g </w>': 1, '! </w>': 1}
         """
 
-        pattern_find = list(pairs_pattern.keys())[0]
+        if len(pairs_pattern.keys()) == 0:
+            return vocab, None
 
-        pattern_A = pattern_find[0]
-        pattern_B = pattern_find[1]
+        else:
+            pattern_find = list(pairs_pattern.keys())[0]
 
-        bigram = " ".join([pattern_A, pattern_B])
+            pattern_A = pattern_find[0]
+            pattern_B = pattern_find[1]
 
-        pattern = "".join([pattern_A, pattern_B])
+            bigram = " ".join([pattern_A, pattern_B])
 
-        merged_vocab = collections.defaultdict(int)
+            pattern = "".join([pattern_A, pattern_B])
 
-        # This regex case here is weird... had to look at the paper for the negative lookbehinds.
-        # Without this, for example, the merge rule ('e','l') would produce 'el','del','rel'
-        regex_pattern = re.compile(r"(?<!\S)" + re.escape(bigram) + r"(?!\S)")
+            merged_vocab = collections.defaultdict(int)
 
-        for word, freq in vocab.items():
+            # This regex case here is weird... had to look at the paper for the negative lookbehinds.
+            # Without this, for example, the merge rule ('e','l') would produce 'el','del','rel'
+            regex_pattern = re.compile(r"(?<!\S)" + re.escape(bigram) + r"(?!\S)")
 
-            repl = re.sub(regex_pattern, pattern, word)
-            merged_vocab[repl] += freq
+            for word, freq in vocab.items():
 
-        return merged_vocab, pattern
+                repl = re.sub(regex_pattern, pattern, word)
+                merged_vocab[repl] += freq
+
+            return merged_vocab, pattern
 
     def perform_BPE(self, num_merges):
 
@@ -122,6 +126,7 @@ class BytePairEncoding:
         for i in tqdm(range(num_merges)):
             pairs_pattern = self.count_pairs(vocab)
             vocab, pattern = self.perform_merge(vocab, pairs_pattern)
+
             if pattern is not None:
                 self.vocab.append(pattern)
 
@@ -141,11 +146,10 @@ class BytePairEncoding:
 
         itos = {i: vocab[i] for i in range(len(vocab))}
 
-
         stoi = {vocab[i]: i for i in range(len(vocab))}
 
         if save_tokenization:
-            with open("tokenization.json", "w") as j:
+            with open("saved_tokenizations/tokenization.json", "w") as j:
                 json.dump(itos, j, indent=4)
         return stoi, itos
 
@@ -157,6 +161,8 @@ class BytePairEncoding:
         self.itos = {int(k): v for k, v in saved_dict.items()}
 
         self.stoi = {v: int(k) for k, v in saved_dict.items()}
+
+        self.vocab = list(saved_dict.values())
 
     def create_vocab_and_tokenization(self, num_merges):
         BPE_vocab = self.perform_BPE(num_merges=num_merges)
@@ -182,7 +188,7 @@ class BytePairEncoding:
 
         word_tokenization = []
 
-        for word in split_chars:
+        for word in tqdm(split_chars):
             for token in sorted(self.vocab, key=len, reverse=True):
                 # Splits BPE tokens like 'mathbb</w>' -> ['mathbb', '</w>', '']
                 split_tok = re.split(f"({self.EOW_TOKEN})", token)
@@ -205,12 +211,13 @@ class BytePairEncoding:
                         string=word,
                     )
             word_tokenization += word.split()
-        # print(word_tokenization)
+
         # Replace unknown tokens with UNK TOKEN
-        word_tokenization = [i if i in self.stoi.keys() else self.UNK_TOKEN for i in word_tokenization]
+        word_tokenization = [
+            i if i in self.stoi.keys() else self.UNK_TOKEN for i in word_tokenization
+        ]
         print(word_tokenization)
         return [self.stoi[i] for i in word_tokenization]
-
 
     def tokens_to_str(self, tokens):
         """
@@ -223,17 +230,26 @@ class BytePairEncoding:
 
 
 if __name__ == "__main__":
-    import pickle
-    BPE = BytePairEncoding(corpus_path=r"tests\test_medium.txt", lower_case=True)
 
-    BPE.create_vocab_and_tokenization(num_merges=250)
+    bpe = BytePairEncoding(corpus_path=r"data\corpus.txt", lower_case=True)
 
-    with open('bpe_expected_uncased.pkl', 'wb') as f:
-        pickle.dump(BPE.vocab, f)
-    # print(BPE.vocab)
+    bpe.create_vocab_and_tokenization(num_merges=5000)
+    
+    # bpe.load_tokenization('tokenization.json')
 
-    tokens = BPE.tokenize(
-        string_to_tokenize="This is a test sentence we are trying to tokenize. Lets see what happens. manifold Frobenius! Harry!"
-    )
-    print(BPE.tokens_to_str(tokens))
+    # string_to_tokenize = """
+    # Byte pair encoding[1][2] or digram coding[3] is a simple form of data compression in which the most common pair of consecutive bytes of data is 
+    # replaced with a byte that does not occur within that data. A table of the replacements is required to rebuild the original data. 
+    # The algorithm was first described publicly by Philip Gage in a February 1994 article "A New Algorithm for Data Compression" in the C Users Journal.
+    # [4]
 
+    # A variant of the technique has shown to be useful in several natural language processing (NLP) applications, such as Google's SentencePiece,[5] 
+    # and OpenAI's GPT-3.[6] 
+    # """ 
+
+    
+
+    # tokens = bpe.tokenize(
+    #     string_to_tokenize=string_to_tokenize
+    # )
+    # print(bpe.tokens_to_str(tokens))
