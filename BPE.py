@@ -64,7 +64,8 @@ class BytePairEncoding:
         Ex:
         >>> vocab = {'t h i s </w>': 1, 'i s </w>': 1, 'a </w>': 1, 't e s t </w>': 1, 's t r i n g </w>': 1, '! </w>': 1}
         >>> print(count_pairs(vocab))
-        {'is': 2, 's</w>': 2, 'st': 2, 'th': 1, 'hi': 1, 'a</w>': 1, 'te': 1, 'es': 1, 't</w>': 1, 'tr': 1, 'ri': 1, 'in': 1, 'ng': 1, 'g</w>': 1, '!</w>': 1}
+        {('i', 's'): 2, ('s', '</w>'): 2, ('s', 't'): 2, ('t', 'h'): 1, ('h', 'i'): 1, ('a', '</w>'): 1, ('t', 'e'): 1, ('e', 's'): 1, ('t',
+        '</w>'): 1, ('t', 'r'): 1, ('r', 'i'): 1, ('i', 'n'): 1, ('n', 'g'): 1, ('g', '</w>'): 1, ('!', '</w>'): 1}
         """
 
         pairs = collections.defaultdict(int)
@@ -77,9 +78,7 @@ class BytePairEncoding:
                 pairs["".join(word.split()[idx] + word.split()[idx + 1])] += freq
                 pairs_pattern[(word.split()[idx], word.split()[idx + 1])] += freq
 
-        return dict(sorted(pairs.items(), key=lambda x: x[1], reverse=True)), dict(
-            sorted(pairs_pattern.items(), key=lambda x: x[1], reverse=True)
-        )
+        return dict(sorted(pairs_pattern.items(), key=lambda x: x[1], reverse=True))
 
     def perform_merge(self, vocab, pairs_pattern):
         """
@@ -87,9 +86,8 @@ class BytePairEncoding:
 
         Ex:
         >>> vocab = {'t h i s </w>': 1, 'i s </w>': 1, 'a </w>': 1, 't e s t </w>': 1, 's t r i n g </w>': 1, '! </w>': 1}
-        >>> pairs = {'is': 2, 's</w>': 2, 'st': 2, 'th': 1, 'hi': 1, 'a</w>': 1, 'te': 1, 'es': 1, 't</w>': 1, 'tr': 1, 'ri': 1, 'in': 1, 'ng': 1, 'g</w>': 1, '!</w>': 1}
         >>> pairs_pattern = {('i', 's'): 2, ('s', '</w>'): 2, ('s', 't'): 2, ('t', 'h'): 1, ('h', 'i'): 1, ('a', '</w>'): 1, ('t', 'e'): 1, ('e', 's'): 1, ('t', '</w>'): 1, ('t', 'r'): 1, ('r', 'i'): 1, ('i', 'n'): 1, ('n', 'g'): 1, ('g', '</w>'): 1, ('!', '</w>'): 1}
-        >>> print(perform_merge(vocab, pairs, pairs_pattern))
+        >>> print(perform_merge(vocab, pairs_pattern))
         {'t h is </w>': 1, 'is </w>': 1, 'a </w>': 1, 't e s t </w>': 1, 's t r i n g </w>': 1, '! </w>': 1}
         """
 
@@ -122,7 +120,7 @@ class BytePairEncoding:
         self.vocab = self.create_vocab(vocab)
 
         for i in tqdm(range(num_merges)):
-            pairs, pairs_pattern = self.count_pairs(vocab)
+            pairs_pattern = self.count_pairs(vocab)
             vocab, pattern = self.perform_merge(vocab, pairs_pattern)
             if pattern is not None:
                 self.vocab.append(pattern)
@@ -219,14 +217,18 @@ class BytePairEncoding:
 
 
 if __name__ == "__main__":
+    import pickle
+    BPE = BytePairEncoding(corpus_path=r"tests\test_medium.txt", lower_case=False)
 
-    BPE = BytePairEncoding(corpus_path="data/corpus.txt", lower_case=True)
+    BPE.create_vocab_and_tokenization(num_merges=250)
 
-    BPE.create_vocab_and_tokenization(num_merges=1000)
+    with open('bpe_expected_cased.pkl', 'wb') as f:
+        pickle.dump(BPE.vocab, f)
+    print(BPE.vocab)
 
-    tokens = BPE.tokenize(
-        string_to_tokenize="This is a test sentence we are trying to tokenize. Lets see what happens. manifold Frobenius! Harry!"
-    )
-    print(BPE.tokens_to_str(tokens))
+    # tokens = BPE.tokenize(
+    #     string_to_tokenize="This is a test sentence we are trying to tokenize. Lets see what happens. manifold Frobenius! Harry!"
+    # )
+    # print(BPE.tokens_to_str(tokens))
 
-    BPE.load_tokenization("tokenization.json")
+    # BPE.load_tokenization("tokenization.json")
