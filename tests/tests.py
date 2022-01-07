@@ -6,15 +6,7 @@ import pickle
 class TestBPEBasic(unittest.TestCase):
     def setUp(self) -> None:
         self.bpe = BytePairEncoding(
-            corpus_path=r"tests\test_small.txt", lower_case=True
-        )
-
-        self.bpe_full_uncased = BytePairEncoding(
-            corpus_path=r"tests\test_medium.txt", lower_case=True
-        )
-
-        self.bpe_full_cased = BytePairEncoding(
-            corpus_path=r"tests\test_medium.txt", lower_case=False
+            corpus_path=r"tests\data\text\test_small.txt", lower_case=True
         )
 
     def test_split_into_words_and_create_vocab(self):
@@ -99,33 +91,131 @@ class TestBPEBasic(unittest.TestCase):
 
         self.assertEqual(merged_vocab_expected, merged_vocab)
 
+
 class TestBPECased(unittest.TestCase):
     def setUp(self) -> None:
         self.bpe = BytePairEncoding(
-            corpus_path=r"tests\test_medium.txt", lower_case=False
+            corpus_path=r"tests\data\text\test_medium.txt", lower_case=False
         )
 
     def test_perform_BPE_cased(self):
         # Perform uncased BPE on small corpus
         self.bpe.create_vocab_and_tokenization(num_merges=250)
 
-        with open(r"tests\bpe_expected_cased.pkl", "rb") as f:
+        with open(r"tests\data\vocab\bpe_expected_cased.pkl", "rb") as f:
             expected_vocab = pickle.load(f)
 
         self.assertEqual(set(expected_vocab), set(self.bpe.vocab))
+
+    def test_tokenize_cased(self):
+        self.bpe.load_tokenization(r"tests\data\tokenizations\tokenization_cased.json")
+
+        string_to_tokenize = (
+            "This is a test string! It contains UPPERCASE and lowercase"
+        )
+        expected_tokens = [
+            273,
+            101,
+            63,
+            10,
+            11,
+            29,
+            84,
+            29,
+            57,
+            80,
+            295,
+            37,
+            13,
+            84,
+            0,
+            48,
+            109,
+            54,
+            45,
+            25,
+            19,
+            19,
+            27,
+            41,
+            295,
+            295,
+            295,
+            27,
+            37,
+            66,
+            135,
+            17,
+            59,
+            62,
+            29,
+            47,
+        ]
+
+        tokens = self.bpe.tokenize(string_to_tokenize=string_to_tokenize)
+
+        self.assertEqual(tokens, expected_tokens)
 
 
 class TestBPEUncased(unittest.TestCase):
     def setUp(self) -> None:
         self.bpe = BytePairEncoding(
-            corpus_path=r"tests\test_medium.txt", lower_case=True
+            corpus_path=r"tests\data\text\test_medium.txt", lower_case=True
         )
 
     def test_perform_BPE_uncased(self):
         # Perform uncased BPE on small corpus
         self.bpe.create_vocab_and_tokenization(num_merges=250)
 
-        with open(r"tests\bpe_expected_uncased.pkl", "rb") as f:
+        with open(r"tests\data\vocab\bpe_expected_uncased.pkl", "rb") as f:
             expected_vocab = pickle.load(f)
 
         self.assertEqual(set(expected_vocab), set(self.bpe.vocab))
+
+    def test_tokenize_uncased(self):
+        self.bpe.load_tokenization(
+            r"tests\data\tokenizations\tokenization_uncased.json"
+        )
+
+        string_to_tokenize = (
+            "This is a test string! It contains UPPERCASE and lowercase"
+        )
+        expected_tokens = [
+            146,
+            89,
+            52,
+            17,
+            22,
+            1,
+            56,
+            1,
+            45,
+            69,
+            283,
+            25,
+            32,
+            56,
+            27,
+            36,
+            98,
+            41,
+            33,
+            10,
+            0,
+            0,
+            47,
+            51,
+            1,
+            35,
+            55,
+            121,
+            5,
+            47,
+            51,
+            1,
+            35,
+        ]
+
+        tokens = self.bpe.tokenize(string_to_tokenize=string_to_tokenize)
+
+        self.assertEqual(tokens, expected_tokens)
