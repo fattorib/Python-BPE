@@ -3,7 +3,7 @@ from BPE import BytePairEncoding
 import pickle
 
 
-class TestBPE(unittest.TestCase):
+class TestBPEBasic(unittest.TestCase):
     def setUp(self) -> None:
         self.bpe = BytePairEncoding(
             corpus_path=r"tests\test_small.txt", lower_case=True
@@ -99,20 +99,33 @@ class TestBPE(unittest.TestCase):
 
         self.assertEqual(merged_vocab_expected, merged_vocab)
 
-    def test_perform_BPE_uncased(self):
-
-        self.bpe_full_uncased.create_vocab_and_tokenization(num_merges=250)
-
-        with open(r"tests\bpe_expected_uncased.pkl", "rb") as f:
-            expected_vocab = pickle.load(f)
-
-        self.assertEqual(set(expected_vocab), set(self.bpe_full_uncased.vocab))
+class TestBPECased(unittest.TestCase):
+    def setUp(self) -> None:
+        self.bpe = BytePairEncoding(
+            corpus_path=r"tests\test_medium.txt", lower_case=False
+        )
 
     def test_perform_BPE_cased(self):
-
-        self.bpe_full_cased.create_vocab_and_tokenization(num_merges=250)
+        # Perform uncased BPE on small corpus
+        self.bpe.create_vocab_and_tokenization(num_merges=250)
 
         with open(r"tests\bpe_expected_cased.pkl", "rb") as f:
             expected_vocab = pickle.load(f)
 
-        self.assertEqual(set(expected_vocab), set(self.bpe_full_cased.vocab))
+        self.assertEqual(set(expected_vocab), set(self.bpe.vocab))
+
+
+class TestBPEUncased(unittest.TestCase):
+    def setUp(self) -> None:
+        self.bpe = BytePairEncoding(
+            corpus_path=r"tests\test_medium.txt", lower_case=True
+        )
+
+    def test_perform_BPE_uncased(self):
+        # Perform uncased BPE on small corpus
+        self.bpe.create_vocab_and_tokenization(num_merges=250)
+
+        with open(r"tests\bpe_expected_uncased.pkl", "rb") as f:
+            expected_vocab = pickle.load(f)
+
+        self.assertEqual(set(expected_vocab), set(self.bpe.vocab))
