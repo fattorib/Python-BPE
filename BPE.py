@@ -125,6 +125,7 @@ class BytePairEncoding:
             if pattern is not None:
                 self.vocab.append(pattern)
 
+        self.vocab += [self.UNK_TOKEN, self.PAD_TOKEN]
         return vocab
 
     def create_vocab(self, bpe_vocab):
@@ -139,6 +140,7 @@ class BytePairEncoding:
     def create_tokenization(self, vocab, save_tokenization=True):
 
         itos = {i: vocab[i] for i in range(len(vocab))}
+
 
         stoi = {vocab[i]: i for i in range(len(vocab))}
 
@@ -203,8 +205,12 @@ class BytePairEncoding:
                         string=word,
                     )
             word_tokenization += word.split()
+        # print(word_tokenization)
+        # Replace unknown tokens with UNK TOKEN
+        word_tokenization = [i if i in self.stoi.keys() else self.UNK_TOKEN for i in word_tokenization]
         print(word_tokenization)
         return [self.stoi[i] for i in word_tokenization]
+
 
     def tokens_to_str(self, tokens):
         """
@@ -218,17 +224,16 @@ class BytePairEncoding:
 
 if __name__ == "__main__":
     import pickle
-    BPE = BytePairEncoding(corpus_path=r"tests\test_medium.txt", lower_case=False)
+    BPE = BytePairEncoding(corpus_path=r"tests\test_medium.txt", lower_case=True)
 
     BPE.create_vocab_and_tokenization(num_merges=250)
 
-    with open('bpe_expected_cased.pkl', 'wb') as f:
+    with open('bpe_expected_uncased.pkl', 'wb') as f:
         pickle.dump(BPE.vocab, f)
-    print(BPE.vocab)
+    # print(BPE.vocab)
 
-    # tokens = BPE.tokenize(
-    #     string_to_tokenize="This is a test sentence we are trying to tokenize. Lets see what happens. manifold Frobenius! Harry!"
-    # )
-    # print(BPE.tokens_to_str(tokens))
+    tokens = BPE.tokenize(
+        string_to_tokenize="This is a test sentence we are trying to tokenize. Lets see what happens. manifold Frobenius! Harry!"
+    )
+    print(BPE.tokens_to_str(tokens))
 
-    # BPE.load_tokenization("tokenization.json")
