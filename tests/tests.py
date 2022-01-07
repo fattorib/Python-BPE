@@ -59,23 +59,6 @@ class TestBPE(unittest.TestCase):
             "s t r i n g </w>": 1,
             "! </w>": 1,
         }
-        pairs = {
-            "is": 2,
-            "s</w>": 2,
-            "st": 2,
-            "th": 1,
-            "hi": 1,
-            "a</w>": 1,
-            "te": 1,
-            "es": 1,
-            "t</w>": 1,
-            "tr": 1,
-            "ri": 1,
-            "in": 1,
-            "ng": 1,
-            "g</w>": 1,
-            "!</w>": 1,
-        }
         pairs_pattern = {
             ("i", "s"): 2,
             ("s", "</w>"): 2,
@@ -103,6 +86,6 @@ class TestBPE(unittest.TestCase):
             "! </w>": 1,
         }
 
-        merged_vocab, _ = self.bpe.perform_merge(vocab, pairs, pairs_pattern)
+        merged_vocab, _ = self.bpe.perform_merge(vocab, pairs_pattern)
 
         self.assertEqual(merged_vocab_expected, merged_vocab)
