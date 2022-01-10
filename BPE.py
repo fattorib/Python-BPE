@@ -48,7 +48,7 @@ class BytePairEncoding:
 
         """
 
-        split_string = nltk.wordpunct_tokenize(self.corpus )
+        split_string = nltk.wordpunct_tokenize(self.corpus)
 
         vocab = collections.defaultdict(int)
         for word in split_string:
@@ -100,7 +100,7 @@ class BytePairEncoding:
             pattern_A = pattern_find[0]
             pattern_B = pattern_find[1]
 
-            bigram = " ".join([pattern_A,  pattern_B])
+            bigram = " ".join([pattern_A, pattern_B])
 
             pattern = "".join([pattern_A, pattern_B])
 
@@ -130,7 +130,7 @@ class BytePairEncoding:
             if pattern is not None:
                 self.vocab.append(pattern)
 
-        self.vocab += [self.UNK_TOKEN,  self.PAD_TOKEN]
+        self.vocab += [self.UNK_TOKEN, self.PAD_TOKEN]
         return vocab
 
     def create_vocab(self, bpe_vocab):
@@ -160,7 +160,7 @@ class BytePairEncoding:
 
         self.itos = {int(k): v for k, v in saved_dict.items()}
 
-        self.stoi = {v: int(k) for k, v in  saved_dict.items()}
+        self.stoi = {v: int(k) for k, v in saved_dict.items()}
 
         self.vocab = list(saved_dict.values())
 
@@ -214,7 +214,7 @@ class BytePairEncoding:
 
         # Replace unknown tokens with UNK TOKEN
         word_tokenization = [
-            i if i in self.stoi.keys() else  self.UNK_TOKEN for i in word_tokenization
+            i if i in self.stoi.keys() else self.UNK_TOKEN for i in word_tokenization
         ]
         print(word_tokenization)
         return [self.stoi[i] for i in word_tokenization]
@@ -226,12 +226,12 @@ class BytePairEncoding:
 
         concat_str = "".join([self.itos[i] for i in tokens])
 
-        return " ".join(concat_str.split(self.EOW_TOKEN) )
+        return " ".join(concat_str.split(self.EOW_TOKEN))
 
 
 if __name__ == "__main__":
 
-    bpe = BytePairEncoding(corpus_path=r"data\corpus.txt",  lower_case=False)
+    bpe = BytePairEncoding(corpus_path=r"data\corpus.txt", lower_case=False)
 
     # bpe.create_vocab_and_tokenization(num_merges=250)
 
