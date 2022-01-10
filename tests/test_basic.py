@@ -220,5 +220,6 @@ class TestBPEUncased(unittest.TestCase):
 
         self.assertEqual(tokens, expected_tokens)
 
-if __name__ == '__main__':
-  unittest.main()
+
+if __name__ == "__main__":
+    unittest.main()

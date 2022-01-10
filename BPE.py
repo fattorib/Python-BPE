@@ -235,7 +235,7 @@ if __name__ == "__main__":
 
     # bpe.create_vocab_and_tokenization(num_merges=250)
 
-    bpe.load_tokenization(r'saved_tokenizations\tokenization.json')
+    bpe.load_tokenization(r"saved_tokenizations\tokenization.json")
 
     string_to_tokenize = """
     Byte pair encoding[1][2] or digram coding[3] is a simple form of data compression in which the most common pair of consecutive bytes of data is
@@ -247,7 +247,5 @@ if __name__ == "__main__":
     and OpenAI's GPT-3.[6]
     """
 
-    tokens = bpe.tokenize(
-        string_to_tokenize=string_to_tokenize
-    )
+    tokens = bpe.tokenize(string_to_tokenize=string_to_tokenize)
     print(bpe.tokens_to_str(tokens))
