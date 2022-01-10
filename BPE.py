@@ -231,25 +231,23 @@ class BytePairEncoding:
 
 if __name__ == "__main__":
 
-    bpe = BytePairEncoding(corpus_path=r"data\corpus.txt", lower_case=True)
+    bpe = BytePairEncoding(corpus_path=r"data\corpus.txt", lower_case=False)
 
-    bpe.create_vocab_and_tokenization(num_merges=5000)
-    
-    # bpe.load_tokenization('tokenization.json')
+    # bpe.create_vocab_and_tokenization(num_merges=250)
 
-    # string_to_tokenize = """
-    # Byte pair encoding[1][2] or digram coding[3] is a simple form of data compression in which the most common pair of consecutive bytes of data is 
-    # replaced with a byte that does not occur within that data. A table of the replacements is required to rebuild the original data. 
-    # The algorithm was first described publicly by Philip Gage in a February 1994 article "A New Algorithm for Data Compression" in the C Users Journal.
-    # [4]
+    bpe.load_tokenization(r'saved_tokenizations\tokenization.json')
 
-    # A variant of the technique has shown to be useful in several natural language processing (NLP) applications, such as Google's SentencePiece,[5] 
-    # and OpenAI's GPT-3.[6] 
-    # """ 
+    string_to_tokenize = """
+    Byte pair encoding[1][2] or digram coding[3] is a simple form of data compression in which the most common pair of consecutive bytes of data is
+    replaced with a byte that does not occur within that data. A table of the replacements is required to rebuild the original data.
+    The algorithm was first described publicly by Philip Gage in a February 1994 article "A New Algorithm for Data Compression" in the C Users Journal.
+    [4]
 
-    
+    A variant of the technique has shown to be useful in several natural language processing (NLP) applications, such as Google's SentencePiece,[5]
+    and OpenAI's GPT-3.[6]
+    """
 
-    # tokens = bpe.tokenize(
-    #     string_to_tokenize=string_to_tokenize
-    # )
-    # print(bpe.tokens_to_str(tokens))
+    tokens = bpe.tokenize(
+        string_to_tokenize=string_to_tokenize
+    )
+    print(bpe.tokens_to_str(tokens))

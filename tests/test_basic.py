@@ -219,3 +219,6 @@ class TestBPEUncased(unittest.TestCase):
         tokens = self.bpe.tokenize(string_to_tokenize=string_to_tokenize)
 
         self.assertEqual(tokens, expected_tokens)
+
+if __name__ == '__main__':
+  unittest.main()
