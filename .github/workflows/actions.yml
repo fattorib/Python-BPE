@@ -1,16 +1,14 @@
 name: Unittest 
 on: [push]
 jobs: 
-  - name: Run basic tests
-  runs-on: ubuntu-latest
-  steps:
-  - name: Checkout Code
-  - uses: actions/checkout@v2
-  - name: Set up Python 3.8
-  - uses: actions/setup-python@v2
-  with:
-    python-version 3.8
-  - name: Install req
-  - run: pip install -r requirements.txt
-  - name: Run Pytest
-  - run: python -m pytest -s -v
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+      - uses: actions/setup-python@v2
+        with:
+          python-version 3.8
+      - run: pip install -r requirements.txt
+      - run: python -m pytest
