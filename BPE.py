@@ -64,7 +64,8 @@ class BytePairEncoding:
         Ex:
         >>> vocab = {'t h i s </w>': 1, 'i s </w>': 1, 'a </w>': 1, 't e s t </w>': 1, 's t r i n g </w>': 1, '! </w>': 1}
         >>> print(count_pairs(vocab))
-        {'is': 2, 's</w>': 2, 'st': 2, 'th': 1, 'hi': 1, 'a</w>': 1, 'te': 1, 'es': 1, 't</w>': 1, 'tr': 1, 'ri': 1, 'in': 1, 'ng': 1, 'g</w>': 1, '!</w>': 1}
+        {('i', 's'): 2, ('s', '</w>'): 2, ('s', 't'): 2, ('t', 'h'): 1, ('h', 'i'): 1, ('a', '</w>'): 1, ('t', 'e'): 1, ('e', 's'): 1, ('t',
+        '</w>'): 1, ('t', 'r'): 1, ('r', 'i'): 1, ('i', 'n'): 1, ('n', 'g'): 1, ('g', '</w>'): 1, ('!', '</w>'): 1}
         """
 
         pairs = collections.defaultdict(int)
@@ -77,41 +78,44 @@ class BytePairEncoding:
                 pairs["".join(word.split()[idx] + word.split()[idx + 1])] += freq
                 pairs_pattern[(word.split()[idx], word.split()[idx + 1])] += freq
 
-        return dict(sorted(pairs.items(), key=lambda x: x[1], reverse=True)), dict(
-            sorted(pairs_pattern.items(), key=lambda x: x[1], reverse=True)
-        )
+        return dict(sorted(pairs_pattern.items(), key=lambda x: x[1], reverse=True))
 
-    def perform_merge(self, vocab, pairs, pairs_pattern):
+    def perform_merge(self, vocab, pairs_pattern):
         """
         From a (possibly merged) vocabulary, perform a merge on the given pattern
 
         Ex:
         >>> vocab = {'t h i s </w>': 1, 'i s </w>': 1, 'a </w>': 1, 't e s t </w>': 1, 's t r i n g </w>': 1, '! </w>': 1}
-        >>> pairs = {'is': 2, 's</w>': 2, 'st': 2, 'th': 1, 'hi': 1, 'a</w>': 1, 'te': 1, 'es': 1, 't</w>': 1, 'tr': 1, 'ri': 1, 'in': 1, 'ng': 1, 'g</w>': 1, '!</w>': 1}
         >>> pairs_pattern = {('i', 's'): 2, ('s', '</w>'): 2, ('s', 't'): 2, ('t', 'h'): 1, ('h', 'i'): 1, ('a', '</w>'): 1, ('t', 'e'): 1, ('e', 's'): 1, ('t', '</w>'): 1, ('t', 'r'): 1, ('r', 'i'): 1, ('i', 'n'): 1, ('n', 'g'): 1, ('g', '</w>'): 1, ('!', '</w>'): 1}
-        >>> print(perform_merge(vocab, pairs, pairs_pattern))
+        >>> print(perform_merge(vocab, pairs_pattern))
         {'t h is </w>': 1, 'is </w>': 1, 'a </w>': 1, 't e s t </w>': 1, 's t r i n g </w>': 1, '! </w>': 1}
         """
 
-        pattern = list(pairs.keys())[0]
+        if len(pairs_pattern.keys()) == 0:
+            return vocab, None
 
-        pattern_find = list(pairs_pattern.keys())[0]
+        else:
+            pattern_find = list(pairs_pattern.keys())[0]
 
-        pattern_A = pattern_find[0]
-        pattern_B = pattern_find[1]
+            pattern_A = pattern_find[0]
+            pattern_B = pattern_find[1]
 
-        bigram = " ".join([pattern_A, pattern_B])
+            bigram = " ".join([pattern_A, pattern_B])
 
-        merged_vocab = collections.defaultdict(int)
+            pattern = "".join([pattern_A, pattern_B])
 
-        for word, freq in vocab.items():
+            merged_vocab = collections.defaultdict(int)
 
             # This regex case here is weird... had to look at the paper for the negative lookbehinds.
             # Without this, for example, the merge rule ('e','l') would produce 'el','del','rel'
-            repl = re.sub(r"(?<!\S)" + re.escape(bigram) + r"(?!\S)", pattern, word)
-            merged_vocab[repl] += freq
+            regex_pattern = re.compile(r"(?<!\S)" + re.escape(bigram) + r"(?!\S)")
 
-        return merged_vocab, pattern
+            for word, freq in vocab.items():
+
+                repl = re.sub(regex_pattern, pattern, word)
+                merged_vocab[repl] += freq
+
+            return merged_vocab, pattern
 
     def perform_BPE(self, num_merges):
 
@@ -120,12 +124,13 @@ class BytePairEncoding:
         self.vocab = self.create_vocab(vocab)
 
         for i in tqdm(range(num_merges)):
-            pairs, pairs_pattern = self.count_pairs(vocab)
-            vocab, pattern = self.perform_merge(vocab, pairs, pairs_pattern)
+            pairs_pattern = self.count_pairs(vocab)
+            vocab, pattern = self.perform_merge(vocab, pairs_pattern)
+
             if pattern is not None:
                 self.vocab.append(pattern)
-            # print(f'Number of tokens at {i}th merge {len(self.vocab)}')
 
+        self.vocab += [self.UNK_TOKEN, self.PAD_TOKEN]
         return vocab
 
     def create_vocab(self, bpe_vocab):
@@ -135,7 +140,6 @@ class BytePairEncoding:
             for token in word.split():
                 vocab.append(token)
 
-        # return sorted(list(set(vocab)))
         return list(set(vocab))
 
     def create_tokenization(self, vocab, save_tokenization=True):
@@ -145,7 +149,7 @@ class BytePairEncoding:
         stoi = {vocab[i]: i for i in range(len(vocab))}
 
         if save_tokenization:
-            with open("tokenization.json", "w") as j:
+            with open("saved_tokenizations/tokenization.json", "w") as j:
                 json.dump(itos, j, indent=4)
         return stoi, itos
 
@@ -157,6 +161,8 @@ class BytePairEncoding:
         self.itos = {int(k): v for k, v in saved_dict.items()}
 
         self.stoi = {v: int(k) for k, v in saved_dict.items()}
+
+        self.vocab = list(saved_dict.values())
 
     def create_vocab_and_tokenization(self, num_merges):
         BPE_vocab = self.perform_BPE(num_merges=num_merges)
@@ -182,7 +188,7 @@ class BytePairEncoding:
 
         word_tokenization = []
 
-        for word in split_chars:
+        for word in tqdm(split_chars):
             for token in sorted(self.vocab, key=len, reverse=True):
                 # Splits BPE tokens like 'mathbb</w>' -> ['mathbb', '</w>', '']
                 split_tok = re.split(f"({self.EOW_TOKEN})", token)
@@ -205,6 +211,11 @@ class BytePairEncoding:
                         string=word,
                     )
             word_tokenization += word.split()
+
+        # Replace unknown tokens with UNK TOKEN
+        word_tokenization = [
+            i if i in self.stoi.keys() else self.UNK_TOKEN for i in word_tokenization
+        ]
         print(word_tokenization)
         return [self.stoi[i] for i in word_tokenization]
 
@@ -220,13 +231,21 @@ class BytePairEncoding:
 
 if __name__ == "__main__":
 
-    BPE = BytePairEncoding(corpus_path="corpus.txt", lower_case=True)
+    bpe = BytePairEncoding(corpus_path=r"data\corpus.txt", lower_case=False)
 
-    BPE.create_vocab_and_tokenization(num_merges=500)
+    # bpe.create_vocab_and_tokenization(num_merges=250)
 
-    # tokens = BPE.tokenize(
-    #     string_to_tokenize="This is a test sentence we are trying to tokenize. Lets see what happens. manifold Frobenius! Harry!"
-    # )
-    # print(BPE.tokens_to_str(tokens))
+    bpe.load_tokenization(r"saved_tokenizations\tokenization.json")
 
-    BPE.load_tokenization("tokenization.json")
+    string_to_tokenize = """
+    Byte pair encoding[1][2] or digram coding[3] is a simple form of data compression in which the most common pair of consecutive bytes of data is
+    replaced with a byte that does not occur within that data. A table of the replacements is required to rebuild the original data.
+    The algorithm was first described publicly by Philip Gage in a February 1994 article "A New Algorithm for Data Compression" in the C Users Journal.
+    [4]
+
+    A variant of the technique has shown to be useful in several natural language processing (NLP) applications, such as Google's SentencePiece,[5]
+    and OpenAI's GPT-3.[6]
+    """
+
+    tokens = bpe.tokenize(string_to_tokenize=string_to_tokenize)
+    print(bpe.tokens_to_str(tokens))
