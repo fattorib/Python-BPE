@@ -1,7 +1,4 @@
 # Python Implementation of BPE 
-
-BPE Paper: [https://arxiv.org/abs/1508.07909](https://arxiv.org/abs/1508.07909)
-
 Pedagogical implementation of Byte-Pair Encoding in pure Python. 
 
 ## Example Use
@@ -26,6 +23,9 @@ and OpenAI's GPT-3.[6]
 #tokenize string
 tokens = bpe.tokenize(string_to_tokenize=string_to_tokenize)
 ```
+
+## References
+BPE Paper: [https://arxiv.org/abs/1508.07909](https://arxiv.org/abs/1508.07909)
 
 ## Testing
 ```
