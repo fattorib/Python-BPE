@@ -28,7 +28,6 @@ tokens = bpe.tokenize(string_to_tokenize=string_to_tokenize)
 ```
 
 ## Testing
-To run unittests, you can use 
 ```
 python -m pytest
 ```
