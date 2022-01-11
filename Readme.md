@@ -24,10 +24,10 @@ and OpenAI's GPT-3.[6]
 tokens = bpe.tokenize(string_to_tokenize=string_to_tokenize)
 ```
 
-## References
-BPE Paper: [https://arxiv.org/abs/1508.07909](https://arxiv.org/abs/1508.07909)
-
 ## Testing
 ```
 python -m pytest
 ```
+
+## References
+BPE Paper: [https://arxiv.org/abs/1508.07909](https://arxiv.org/abs/1508.07909)
