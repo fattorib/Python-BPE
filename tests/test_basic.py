@@ -154,7 +154,7 @@ class TestBPECased(unittest.TestCase):
 
         tokens = self.bpe.tokenize(string_to_tokenize=string_to_tokenize)
 
-        self.assertEqual(tokens, expected_tokens)
+        self.assertEqual(tokens.converted_tokens, expected_tokens)
 
 
 class TestBPEUncased(unittest.TestCase):
@@ -218,7 +218,7 @@ class TestBPEUncased(unittest.TestCase):
 
         tokens = self.bpe.tokenize(string_to_tokenize=string_to_tokenize)
 
-        self.assertEqual(tokens, expected_tokens)
+        self.assertEqual(tokens.converted_tokens, expected_tokens)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,13 @@
 import collections, re
+from typing import Iterable, NamedTuple
 import nltk
 import json
 from tqdm import tqdm
+
+
+class Tokenization(NamedTuple):
+    tokens: Iterable[str]
+    converted_tokens: Iterable[int]
 
 
 class BytePairEncoding:
@@ -216,8 +222,8 @@ class BytePairEncoding:
         word_tokenization = [
             i if i in self.stoi.keys() else self.UNK_TOKEN for i in word_tokenization
         ]
-        print(word_tokenization)
-        return [self.stoi[i] for i in word_tokenization]
+        
+        return Tokenization(word_tokenization, [self.stoi[i] for i in word_tokenization] )
 
     def tokens_to_str(self, tokens):
         """
@@ -248,4 +254,7 @@ if __name__ == "__main__":
     """
 
     tokens = bpe.tokenize(string_to_tokenize=string_to_tokenize)
-    print(bpe.tokens_to_str(tokens))
+    # print(bpe.tokens_to_str(tokens))
+
+    print(tokens.tokens)
+    print(tokens.converted_tokens)
