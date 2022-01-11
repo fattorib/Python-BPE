@@ -8,7 +8,7 @@ Pedagogical implementation of Byte-Pair Encoding in pure Python.
 
 ```python
 #initialize BPE. Need to specify corpus path and whether to use a cased vocabulary
-bpe = BytePairEncoding(corpus_path=r"your_corpus_here.txt", lower_case=False)
+bpe = BytePairEncoding(corpus_path="your_corpus_here.txt", lower_case=False)
 
 #perform merges
 bpe.create_vocab_and_tokenization(num_merges=5000)
